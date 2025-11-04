@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useCourse } from "@/components/course-context";
 import { useStore } from "@/lib/store";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -42,11 +43,29 @@ import { cn } from "@/lib/utils";
 export function CourseLayout() {
   const { course, courses, switchCourse, isLoading } = useCourse();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("overview");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "overview");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const user = useStore((state) => state.getCurrentUser());
+
+  // Sync tab with URL
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl, activeTab]);
+
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", value);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
 
   // Detect mobile screen size
   useEffect(() => {
@@ -238,7 +257,7 @@ export function CourseLayout() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
           <div className="border-b bg-card/50 backdrop-blur-sm px-3 md:px-4 sticky top-0 z-10 safe-top">
             <TabsList className="h-auto bg-transparent p-1 gap-1 overflow-x-auto touch-scroll no-scrollbar">
               <TabsTrigger
