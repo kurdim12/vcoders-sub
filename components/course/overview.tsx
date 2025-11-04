@@ -27,20 +27,31 @@ export function CourseOverview() {
 
   const today = new Date();
   const todayBlocks = studyBlocks.filter((block) => {
+    if (!block.startAt) return false;
     const blockDate = new Date(block.startAt);
-    return blockDate.toDateString() === today.toDateString();
+    return !isNaN(blockDate.getTime()) && blockDate.toDateString() === today.toDateString();
   });
 
   const dueThisWeek = assignments.filter((a) => {
+    if (!a.dueAt || a.status === "submitted") return false;
     const dueDate = new Date(a.dueAt);
+    if (isNaN(dueDate.getTime())) return false;
     const weekFromNow = new Date();
     weekFromNow.setDate(weekFromNow.getDate() + 7);
-    return dueDate <= weekFromNow && a.status !== "submitted";
+    return dueDate <= weekFromNow;
   });
 
   const nextExam = exams
-    .filter((e) => new Date(e.startAt) > today)
-    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())[0];
+    .filter((e) => {
+      if (!e.startAt) return false;
+      const startDate = new Date(e.startAt);
+      return !isNaN(startDate.getTime()) && startDate > today;
+    })
+    .sort((a, b) => {
+      const dateA = a.startAt ? new Date(a.startAt).getTime() : 0;
+      const dateB = b.startAt ? new Date(b.startAt).getTime() : 0;
+      return dateA - dateB;
+    })[0];
 
   const materials = useStore((state) =>
     state.materials.filter((m) => m.courseId === courseId)
@@ -184,15 +195,19 @@ export function CourseOverview() {
                   <div key={block.id} className="p-3 rounded-lg bg-accent/50">
                     <p className="font-medium text-sm">{block.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(block.startAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
+                      {block.startAt && !isNaN(new Date(block.startAt).getTime())
+                        ? new Date(block.startAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "Invalid"}{" "}
                       -{" "}
-                      {new Date(block.endAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {block.endAt && !isNaN(new Date(block.endAt).getTime())
+                        ? new Date(block.endAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "Invalid"}
                     </p>
                     <Badge variant="outline" className="mt-1 text-xs capitalize">
                       {block.status}

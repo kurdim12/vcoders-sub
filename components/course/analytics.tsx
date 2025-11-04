@@ -19,8 +19,10 @@ export function CourseAnalytics() {
   const minutesStudied = studyBlocks
     .filter((b) => b.status === "done")
     .reduce((acc, block) => {
+      if (!block.startAt || !block.endAt) return 0;
       const start = new Date(block.startAt);
       const end = new Date(block.endAt);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
       return acc + (end.getTime() - start.getTime()) / (1000 * 60);
     }, 0);
 

@@ -16,8 +16,16 @@ export function CourseExams() {
   const exams = useStore((state) => state.exams.filter((e) => e.courseId === courseId));
 
   const now = new Date();
-  const upcoming = exams.filter((e) => new Date(e.startAt) > now);
-  const past = exams.filter((e) => new Date(e.startAt) <= now);
+  const upcoming = exams.filter((e) => {
+    if (!e.startAt) return false;
+    const startDate = new Date(e.startAt);
+    return !isNaN(startDate.getTime()) && startDate > now;
+  });
+  const past = exams.filter((e) => {
+    if (!e.startAt) return false;
+    const startDate = new Date(e.startAt);
+    return !isNaN(startDate.getTime()) && startDate <= now;
+  });
 
   return (
     <div className="space-y-6">
@@ -51,8 +59,10 @@ export function CourseExams() {
                               <Clock className="w-4 h-4" />
                               <span>
                                 {Math.round(
-                                  (new Date(exam.endAt).getTime() -
-                                    new Date(exam.startAt).getTime()) /
+                                  (exam.endAt && exam.startAt
+                                    ? new Date(exam.endAt).getTime() -
+                                      new Date(exam.startAt).getTime()
+                                    : 0) /
                                     (1000 * 60)
                                 )}{" "}
                                 minutes

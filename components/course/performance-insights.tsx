@@ -33,27 +33,37 @@ export function CoursePerformanceInsights() {
 
   useEffect(() => {
     if (courseId) {
-      const calculatedMetrics = calculatePerformanceMetrics(
-        courseId,
-        assignments,
-        studyBlocks,
-        learningEvents
-      );
-      setMetrics(calculatedMetrics);
+      try {
+        const calculatedMetrics = calculatePerformanceMetrics(
+          courseId,
+          assignments,
+          studyBlocks,
+          learningEvents
+        );
+        setMetrics(calculatedMetrics);
 
-      const upcomingExams = exams.filter(
-        (e) => new Date(e.startAt) > new Date()
-      );
-      const upcomingAssignments = assignments.filter(
-        (a) => new Date(a.dueAt) > new Date() && a.status !== "submitted"
-      );
+        const upcomingExams = exams.filter((e) => {
+          if (!e.startAt) return false;
+          const startDate = new Date(e.startAt);
+          return !isNaN(startDate.getTime()) && startDate > new Date();
+        });
+        const upcomingAssignments = assignments.filter((a) => {
+          if (!a.dueAt || a.status === "submitted") return false;
+          const dueDate = new Date(a.dueAt);
+          return !isNaN(dueDate.getTime()) && dueDate > new Date();
+        });
 
-      const generatedInsights = generateInsights(
-        calculatedMetrics,
-        upcomingExams,
-        upcomingAssignments
-      );
-      setInsights(generatedInsights);
+        const generatedInsights = generateInsights(
+          calculatedMetrics,
+          upcomingExams,
+          upcomingAssignments
+        );
+        setInsights(generatedInsights);
+      } catch (error) {
+        console.error("Error calculating performance insights:", error);
+        setMetrics(null);
+        setInsights([]);
+      }
     }
   }, [courseId, assignments, studyBlocks, exams, learningEvents]);
 

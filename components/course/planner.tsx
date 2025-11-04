@@ -31,8 +31,16 @@ export function CoursePlanner() {
 
     const now = new Date();
     const upcomingAssignments = assignments
-      .filter((a) => new Date(a.dueAt) > now && a.status !== "submitted")
-      .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+      .filter((a) => {
+        if (!a.dueAt || a.status === "submitted") return false;
+        const dueDate = new Date(a.dueAt);
+        return !isNaN(dueDate.getTime()) && dueDate > now;
+      })
+      .sort((a, b) => {
+        const dateA = a.dueAt ? new Date(a.dueAt).getTime() : 0;
+        const dateB = b.dueAt ? new Date(b.dueAt).getTime() : 0;
+        return dateA - dateB;
+      });
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -88,7 +96,9 @@ export function CoursePlanner() {
             {weekDates.map((date) => {
               const dateStr = date.toISOString().split("T")[0];
               const blocksForDay = studyBlocks.filter((block) => {
+                if (!block.startAt) return false;
                 const blockDate = new Date(block.startAt);
+                if (isNaN(blockDate.getTime())) return false;
                 return blockDate.toISOString().split("T")[0] === dateStr;
               });
 

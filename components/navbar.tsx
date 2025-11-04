@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 import { importSnapshot } from "@/lib/storage";
 import { ModeIndicator } from "@/components/mode-indicator";
+import { AccountSwitcher } from "@/components/account-switcher";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -196,10 +197,8 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Profile */}
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <User className="h-5 w-5" />
-            </Button>
+            {/* Account Switcher */}
+            <AccountSwitcher />
           </div>
         </div>
 

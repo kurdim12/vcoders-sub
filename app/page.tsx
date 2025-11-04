@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Redirect to landing page first, then to sign in after a short delay
+    setMounted(true);
+    // Redirect to account selection after a short delay
     const timer = setTimeout(() => {
-      router.push("/landing");
+      router.push("/auth/select-account");
     }, 500);
 
     return () => clearTimeout(timer);
   }, [router]);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">

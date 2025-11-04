@@ -36,6 +36,11 @@ export default function GlobalError({
                   Error ID: {error.digest}
                 </p>
               )}
+              {error.message && (
+                <p className="text-xs text-muted-foreground">
+                  {error.message}
+                </p>
+              )}
               <Button onClick={reset} variant="default" className="w-full">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Reload Page
@@ -47,4 +52,3 @@ export default function GlobalError({
     </html>
   );
 }
-

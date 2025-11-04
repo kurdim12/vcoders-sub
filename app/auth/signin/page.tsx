@@ -62,13 +62,8 @@ export default function SignInPage() {
       // Wait a bit for store to update
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Redirect to first course or courses list
-      const courses = store.courses;
-      if (courses.length > 0) {
-        router.push(`/courses/${courses[0].id}`);
-      } else {
-        router.push("/courses");
-      }
+      // Redirect to account selection
+      router.push("/auth/select-account");
     } catch (err) {
       console.error("Sign in error:", err);
       setError("Failed to sign in. Please try again.");

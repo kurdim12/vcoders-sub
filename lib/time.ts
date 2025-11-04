@@ -1,38 +1,59 @@
-import { format, formatDistance, isAfter, isBefore, parseISO } from "date-fns";
+import { format, formatDistance, isAfter, isBefore, parseISO, isValid } from "date-fns";
 
-export function formatDate(date: string | Date): string {
-  const d = typeof date === "string" ? parseISO(date) : date;
+function safeParseDate(date: string | Date | null | undefined): Date | null {
+  if (!date) return null;
+  if (date instanceof Date) {
+    return isValid(date) ? date : null;
+  }
+  try {
+    const parsed = parseISO(date);
+    return isValid(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function formatDate(date: string | Date | null | undefined): string {
+  const d = safeParseDate(date);
+  if (!d) return "Invalid date";
   return format(d, "MMM d, yyyy");
 }
 
-export function formatDateTime(date: string | Date): string {
-  const d = typeof date === "string" ? parseISO(date) : date;
+export function formatDateTime(date: string | Date | null | undefined): string {
+  const d = safeParseDate(date);
+  if (!d) return "Invalid date";
   return format(d, "MMM d, yyyy h:mm a");
 }
 
-export function formatTime(date: string | Date): string {
-  const d = typeof date === "string" ? parseISO(date) : date;
+export function formatTime(date: string | Date | null | undefined): string {
+  const d = safeParseDate(date);
+  if (!d) return "Invalid time";
   return format(d, "h:mm a");
 }
 
-export function formatRelative(date: string | Date): string {
-  const d = typeof date === "string" ? parseISO(date) : date;
+export function formatRelative(date: string | Date | null | undefined): string {
+  const d = safeParseDate(date);
+  if (!d) return "Invalid date";
   return formatDistance(d, new Date(), { addSuffix: true });
 }
 
-export function isDueSoon(dueAt: string, hoursThreshold: number = 48): boolean {
-  const due = parseISO(dueAt);
+export function isDueSoon(dueAt: string | null | undefined, hoursThreshold: number = 48): boolean {
+  const due = safeParseDate(dueAt);
+  if (!due) return false;
   const threshold = new Date();
   threshold.setHours(threshold.getHours() + hoursThreshold);
   return isAfter(due, new Date()) && isBefore(due, threshold);
 }
 
-export function isOverdue(dueAt: string): boolean {
-  return isBefore(parseISO(dueAt), new Date());
+export function isOverdue(dueAt: string | null | undefined): boolean {
+  const due = safeParseDate(dueAt);
+  if (!due) return false;
+  return isBefore(due, new Date());
 }
 
-export function isUpcoming(startAt: string, hoursThreshold: number = 72): boolean {
-  const start = parseISO(startAt);
+export function isUpcoming(startAt: string | null | undefined, hoursThreshold: number = 72): boolean {
+  const start = safeParseDate(startAt);
+  if (!start) return false;
   const threshold = new Date();
   threshold.setHours(threshold.getHours() + hoursThreshold);
   return isAfter(start, new Date()) && isBefore(start, threshold);

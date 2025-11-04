@@ -1,9 +1,9 @@
 import type { StoreSnapshot } from "./types";
+import { getCurrentAccountId, getAccountStorageKey } from "./accounts";
 
-const STORAGE_KEY = "uniagent:v1";
 const STORAGE_VERSION = 1;
 
-export function loadSnapshot(): StoreSnapshot | null {
+export function loadSnapshot(accountId?: string): StoreSnapshot | null {
   // Server-side guard
   if (typeof window === "undefined") return null;
   
@@ -11,7 +11,10 @@ export function loadSnapshot(): StoreSnapshot | null {
     // Check if localStorage is available
     if (typeof localStorage === "undefined") return null;
     
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const currentAccountId = accountId || getCurrentAccountId();
+    const storageKey = getAccountStorageKey(currentAccountId);
+    
+    const stored = localStorage.getItem(storageKey);
     if (!stored) return null;
 
     const parsed = JSON.parse(stored);
@@ -27,24 +30,46 @@ export function loadSnapshot(): StoreSnapshot | null {
   }
 }
 
-export function saveSnapshot(snapshot: StoreSnapshot): void {
+export function saveSnapshot(snapshot: StoreSnapshot, accountId?: string): void {
   if (typeof window === "undefined") return;
 
   try {
+    const currentAccountId = accountId || getCurrentAccountId();
+    const storageKey = getAccountStorageKey(currentAccountId);
+    
     const data = {
       version: STORAGE_VERSION,
       data: snapshot,
       savedAt: new Date().toISOString(),
+      accountId: currentAccountId,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(storageKey, JSON.stringify(data));
   } catch (error) {
     console.error("Failed to save snapshot:", error);
   }
 }
 
-export function clearStorage(): void {
+export function clearStorage(accountId?: string): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY);
+  
+  const currentAccountId = accountId || getCurrentAccountId();
+  const storageKey = getAccountStorageKey(currentAccountId);
+  localStorage.removeItem(storageKey);
+}
+
+// Clear all account data (for reset)
+export function clearAllStorage(): void {
+  if (typeof window === "undefined") return;
+  
+  // Clear all account storage keys
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith("uniagent:") && key.includes(":v1")) {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  // Also clear legacy storage
+  localStorage.removeItem("uniagent:v1");
 }
 
 export function exportSnapshot(snapshot: StoreSnapshot): void {

@@ -21,11 +21,13 @@ import type {
 } from "./types";
 import { loadSnapshot, saveSnapshot, clearStorage } from "./storage";
 import { generateSeedData } from "./seed";
+import { getCurrentAccountId, getAccount } from "./accounts";
 
 interface StoreState extends StoreSnapshot {
   // Initialization
   initialized: boolean;
-  initialize: () => void;
+  initialize: (accountId?: string) => Promise<void>;
+  switchAccount: (accountId: string) => Promise<void>;
 
   // Users
   setCurrentUser: (user: User) => void;
@@ -108,7 +110,8 @@ interface StoreState extends StoreSnapshot {
   // Import/Export
   exportData: () => void;
   importData: (snapshot: StoreSnapshot) => void;
-  resetData: () => void;
+  resetData: () => Promise<void>;
+  resetDataForAccount: (accountId: string) => Promise<void>;
 
   // Persistence
   persist: () => void;
@@ -137,19 +140,62 @@ export const useStore = create<StoreState>((set, get) => ({
   agentContext: [],
   initialized: false,
 
-  // Initialize from localStorage or seed data
-  initialize: () => {
-    const snapshot = loadSnapshot();
+  // Initialize from localStorage or seed data (account-scoped)
+  initialize: async (accountId?: string) => {
+    const currentAccountId = accountId || getCurrentAccountId();
+    const snapshot = loadSnapshot(currentAccountId);
     if (snapshot) {
       set({ ...snapshot, initialized: true });
     } else {
-      const seedData = generateSeedData();
-      set({ ...seedData, initialized: true });
-      saveSnapshot(seedData);
+      // Generate seed data for this account
+      const account = getAccount(currentAccountId);
+      try {
+        const seedData = await generateSeedData(account?.id || currentAccountId);
+        set({ ...seedData, initialized: true });
+        saveSnapshot(seedData, currentAccountId);
+      } catch (error) {
+        console.error("Failed to initialize with comprehensive data:", error);
+        // Fallback to sync version
+        const { generateSeedDataSync } = await import("./seed");
+        const seedData = generateSeedDataSync(account?.id || currentAccountId);
+        set({ ...seedData, initialized: true });
+        saveSnapshot(seedData, currentAccountId);
+      }
     }
   },
+  
+  // Switch account (saves current, loads new)
+  switchAccount: async (newAccountId: string) => {
+    const currentAccountId = getCurrentAccountId();
+    
+    // Save current account's data
+    const currentState = get();
+    const currentSnapshot: StoreSnapshot = {
+      users: currentState.users,
+      courses: currentState.courses,
+      enrollments: currentState.enrollments,
+      materials: currentState.materials,
+      assignments: currentState.assignments,
+      exams: currentState.exams,
+      studyBlocks: currentState.studyBlocks,
+      notes: currentState.notes,
+      resources: currentState.resources,
+      messages: currentState.messages,
+      flashcards: currentState.flashcards || [],
+      settings: currentState.settings,
+      xpEvents: currentState.xpEvents || [],
+      learningEvents: currentState.learningEvents || [],
+      courseAnalytics: currentState.courseAnalytics || [],
+      predictions: currentState.predictions || [],
+      agentContext: currentState.agentContext || [],
+    };
+    saveSnapshot(currentSnapshot, currentAccountId);
+    
+    // Load new account's data
+    await get().initialize(newAccountId);
+  },
 
-  // Persistence helper
+  // Persistence helper (account-scoped)
   persist: () => {
     if (persistTimeout) clearTimeout(persistTimeout);
     persistTimeout = setTimeout(() => {
@@ -490,11 +536,41 @@ export const useStore = create<StoreState>((set, get) => ({
     saveSnapshot(snapshot);
   },
 
-  resetData: () => {
-    clearStorage();
-    const seedData = generateSeedData();
-    set({ ...seedData });
-    saveSnapshot(seedData);
+  resetData: async () => {
+    const currentAccountId = getCurrentAccountId();
+    clearStorage(currentAccountId);
+    const account = getAccount(currentAccountId);
+    try {
+      const seedData = await generateSeedData(account?.id || currentAccountId);
+      set({ ...seedData });
+      saveSnapshot(seedData, currentAccountId);
+    } catch (error) {
+      console.error("Failed to reset with comprehensive data:", error);
+      const { generateSeedDataSync } = await import("./seed");
+      const seedData = generateSeedDataSync(account?.id || currentAccountId);
+      set({ ...seedData });
+      saveSnapshot(seedData, currentAccountId);
+    }
+  },
+
+  resetDataForAccount: async (accountId: string) => {
+    clearStorage(accountId);
+    const account = getAccount(accountId);
+    try {
+      const seedData = await generateSeedData(account?.id || accountId);
+      if (getCurrentAccountId() === accountId) {
+        set({ ...seedData });
+      }
+      saveSnapshot(seedData, accountId);
+    } catch (error) {
+      console.error("Failed to reset account with comprehensive data:", error);
+      const { generateSeedDataSync } = await import("./seed");
+      const seedData = generateSeedDataSync(account?.id || accountId);
+      if (getCurrentAccountId() === accountId) {
+        set({ ...seedData });
+      }
+      saveSnapshot(seedData, accountId);
+    }
   },
 }));
 
