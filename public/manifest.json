@@ -1,0 +1,41 @@
+{
+  "name": "UNI-Agent",
+  "short_name": "UNI-Agent",
+  "description": "AI-powered academic assistant platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0066cc",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your academic dashboard",
+      "url": "/"
+    },
+    {
+      "name": "Courses",
+      "short_name": "Courses",
+      "description": "View your courses",
+      "url": "/courses"
+    }
+  ]
+}
+
