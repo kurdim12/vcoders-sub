@@ -59,6 +59,15 @@ export interface Assignment {
   status: AssignStatus;
   rubric?: string;
   subtasks?: { id: ID; text: string; done: boolean }[];
+  priority?: "low" | "medium" | "high" | "urgent";
+  grade?: number;
+  feedback?: string;
+  timeSpent?: number;
+  submittedAt?: string;
+  progress?: number;
+  estimatedTimeRemaining?: number;
+  checklist?: { id: string; text: string; completed: boolean }[];
+  autoSuggestion?: string;
 }
 
 export type ExamType = "midterm" | "final" | "quiz";

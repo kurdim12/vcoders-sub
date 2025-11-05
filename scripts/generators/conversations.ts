@@ -9,6 +9,18 @@ interface Course {
   title: string;
 }
 
+interface ConversationTemplate {
+  courseCode: string;
+  userPrompt: string;
+  assistantResponse: string;
+  agent: Message["agent"];
+  citations: { sourceId: string; snippet: string }[];
+  showStreaming: boolean;
+  showVoice: boolean;
+  hasImage?: boolean;
+  imageType?: string;
+}
+
 // Agent routing keywords
 const AGENT_KEYWORDS = {
   course: ["explain", "what is", "concept", "material", "understand", "learn"],
@@ -61,7 +73,7 @@ export function generateCSConversations(courses: Course[], userId: string, now: 
   const messages: Message[] = [];
   
   // CONVERSATION TEMPLATES - Designed to showcase features
-  const conversationTemplates = [
+  const conversationTemplates: ConversationTemplate[] = [
     // === STREAMING AI DEMO ===
     {
       courseCode: "CS101",
@@ -161,6 +173,7 @@ Need help with the iterative version or the timing comparison?`,
       agent: "assignment" as const,
       citations: [],
       showStreaming: true,
+      showVoice: false,
     },
     
     // === PLANNER AGENT DEMO ===
@@ -214,6 +227,7 @@ This matches your average for previous exams where you scored 85%+. Based on you
       agent: "planner" as const,
       citations: [],
       showStreaming: true,
+      showVoice: false,
     },
     
     // === EXAM AGENT DEMO ===
@@ -278,6 +292,7 @@ Want me to create a detailed day-by-day study schedule?`,
         { sourceId: "mat-course-cs101-2", snippet: "Big-O Notation Guide, page 15" },
       ],
       showStreaming: true,
+      showVoice: false,
     },
     
     // === NOTES AGENT DEMO ===
@@ -342,6 +357,7 @@ Review them now or schedule for tomorrow? I've set the first review for today to
       agent: "notes" as const,
       citations: [],
       showStreaming: true,
+      showVoice: false,
     },
     
     // === RESEARCH AGENT DEMO ===
@@ -416,6 +432,7 @@ Need help with citations in APA format or expanding any section?`,
       agent: "research" as const,
       citations: [],
       showStreaming: true,
+      showVoice: false,
     },
     
     // === CAMPUS AGENT DEMO ===
@@ -462,6 +479,7 @@ Second floor, east wing
 Need directions to the building or want to schedule time to go?`,
       agent: "campus" as const,
       citations: [],
+      showStreaming: false,
       showVoice: true,
     },
     
@@ -565,13 +583,14 @@ Need help implementing either algorithm?`,
         { sourceId: "mat-course-cs201-1", snippet: "Sorting Algorithms Comparison, pages 7-14" },
       ],
       showStreaming: true,
+      showVoice: false,
     },
     
     // === MULTI-MODAL DEMO (Image Upload) ===
     {
       courseCode: "CS101",
-      userPrompt: "[Image uploaded: homework_error.png] What's wrong with this code?",
-      assistantResponse: `I can see the issue! Looking at your code:
+      userPrompt: "🖼️ [Image: homework_error.png] What's wrong with this code?",
+      assistantResponse: `I can see the issue in your screenshot! [1] Looking at your code:
 
 \`\`\`python
 def fibonacci(n):
@@ -599,7 +618,7 @@ def fibonacci(n):
 
 **ALSO NOTICE:**
 
-Your function is missing the base case for \`n == 0\`. According to your materials, Fibonacci should handle both base cases:
+Your function is missing the base case for \`n == 0\`. [1] According to your "Recursion Deep Dive" materials, Fibonacci should handle both base cases:
 
 \`\`\`python
 def fibonacci(n):
@@ -613,16 +632,604 @@ This matches the definition from your recursion materials: fib(0) = 0, fib(1) = 
 Want me to help test this function?`,
       agent: "course" as const,
       citations: [
-        { sourceId: "mat-course-cs101-1", snippet: "Recursion Deep Dive, Fibonacci example" },
+        { sourceId: "mat-course-cs101-1", snippet: "Recursion Deep Dive: Fibonacci base cases must handle both n=0 and n=1" },
       ],
+      showStreaming: false,
+      showVoice: false,
       hasImage: true,
       imageType: "code_error",
+    },
+    {
+      courseCode: "MATH241",
+      userPrompt: "🖼️ [Image: math_problem.jpg] Can you help me solve this triple integral problem?",
+      assistantResponse: `Let me analyze your handwritten problem! [1]
+
+**THE PROBLEM:**
+
+You need to evaluate: ∫∫∫ z dV over the region bounded by z = x² + y² and z = 4
+
+**SOLUTION APPROACH:**
+
+**1. Visualize the Region** [1]
+- The paraboloid z = x² + y² opens upward from origin
+- The plane z = 4 caps it from above
+- This creates a "bowl" shape
+
+**2. Choose Coordinates**
+
+Cylindrical coordinates (r, θ, z) are perfect here because of circular symmetry!
+
+Conversion:
+- x² + y² = r²
+- Lower bound: z = r²
+- Upper bound: z = 4
+
+**3. Set Up Bounds** [2]
+
+\`\`\`
+z: from r² to 4
+r: from 0 to 2 (where r² = 4)
+θ: from 0 to 2π (full circle)
+\`\`\`
+
+**4. The Integral**
+
+∫₀²ᵖ ∫₀² ∫ᵣ²⁴ z · r dz dr dθ
+
+Note the extra 'r' from the Jacobian!
+
+**5. Evaluate:**
+
+Inner integral (with respect to z):
+= ∫₀²ᵖ ∫₀² [z²/2 · r]ᵣ²⁴ dr dθ
+= ∫₀²ᵖ ∫₀² r(8 - r⁴/2) dr dθ
+
+Middle integral (with respect to r):
+= ∫₀²ᵖ [4r² - r⁶/12]₀² dθ
+= ∫₀²ᵖ (16 - 64/12) dθ
+= ∫₀²ᵖ 32/3 dθ
+
+Outer integral:
+= [32θ/3]₀²ᵖ = **64π/3**
+
+**ANSWER: 64π/3**
+
+**KEY INSIGHTS:**
+✓ Cylindrical coordinates simplified the setup [2]
+✓ Always remember the Jacobian factor (r)
+✓ The paraboloid-plane intersection gave us r ≤ 2
+
+Need help with similar problems?`,
+      agent: "course" as const,
+      citations: [
+        { sourceId: "mat-course-math241-1", snippet: "Vector Calculus: Cylindrical coordinates for regions with circular symmetry" },
+        { sourceId: "mat-course-math241-2", snippet: "Triple Integrals: Don't forget Jacobian factor r in cylindrical coordinates" },
+      ],
+      showStreaming: true,
+      showVoice: false,
+      hasImage: true,
+      imageType: "math_problem",
+    },
+    {
+      courseCode: "CS201",
+      userPrompt: "🖼️ [Image: algorithm_diagram.png] Is my understanding of merge sort correct?",
+      assistantResponse: `Great diagram! Let me verify your understanding. [1]
+
+**ANALYZING YOUR DIAGRAM:**
+
+✅ **Divide Phase - CORRECT!**
+Your diagram shows:
+- [8,3,7,4,9,2,6,5]
+- Split into [8,3,7,4] and [9,2,6,5]
+- Continue splitting until single elements
+- This is exactly right!
+
+✅ **Conquer Phase - CORRECT!**
+Your merge steps show:
+1. [3,8] ← merged [8,3]
+2. [4,7] ← merged [7,4]
+3. [3,4,7,8] ← merged [3,8] and [4,7]
+
+Perfect! You're comparing elements and building sorted subarrays.
+
+**⚠️ ONE SMALL ISSUE:**
+
+In your complexity annotation, you wrote "O(n log n) space complexity"
+
+**CORRECTION:** [1]
+- **Time Complexity:** O(n log n) ✓ (You got this right!)
+- **Space Complexity:** O(n) (not O(n log n))
+
+The space is O(n) because we need an auxiliary array of size n for merging. The log n comes from the depth of recursion, but that's for the call stack (O(log n) auxiliary space), not the merge arrays.
+
+**WHY YOUR DIAGRAM IS EXCELLENT:**
+
+1. **Clear division** into halves ✓
+2. **Recursive breakdown** to single elements ✓
+3. **Bottom-up merging** shown correctly ✓
+4. **Comparison steps** are accurate ✓
+
+**COMPARISON WITH OTHER SORTS:** [2]
+
+From your "Sorting Algorithms" materials:
+- Merge Sort: O(n log n) guaranteed, O(n) space, STABLE
+- Quick Sort: O(n log n) average, O(log n) space, UNSTABLE
+- Bubble Sort: O(n²), O(1) space, STABLE
+
+Your merge sort diagram captures the key advantage: consistent O(n log n) performance through divide-and-conquer!
+
+**FOR YOUR EXAM:**
+
+Make sure you can:
+✓ Explain why it's O(n log n) [log n levels × n work per level]
+✓ Show merge step for any two sorted arrays
+✓ Explain when to use merge sort vs quick sort
+
+Excellent work on the diagram! Just fix that space complexity note.`,
+      agent: "course" as const,
+      citations: [
+        { sourceId: "mat-course-cs201-1", snippet: "Merge Sort: Time O(n log n), Space O(n) for auxiliary array" },
+        { sourceId: "mat-course-cs201-2", snippet: "Sorting Algorithms Comparison: When to use each algorithm" },
+      ],
+      showStreaming: false,
+      showVoice: false,
+      hasImage: true,
+      imageType: "algorithm_diagram",
+    },
+
+    // === MORE NOTES AGENT DEMOS ===
+    {
+      courseCode: "CS201",
+      userPrompt: "Can you create flashcards from my sorting algorithms notes?",
+      assistantResponse: `I'll create flashcards from your sorting notes! 📔
+
+**ANALYZING YOUR NOTES:**
+
+I found notes on Bubble Sort, Merge Sort, and Quick Sort. Let me create targeted flashcards:
+
+**FLASHCARD SET CREATED (12 cards):**
+
+**1. Bubble Sort Basics**
+Q: What is bubble sort's time complexity?
+A: O(n²) worst/average case, O(n) best case with optimizations
+
+**2. Merge Sort Concept**
+Q: How does merge sort work?
+A: Divide array in half, sort recursively, merge sorted halves. Divide-and-conquer approach.
+
+**3. Quick Sort Pivot**
+Q: What is a pivot in quick sort?
+A: Element used to partition array. Good pivot choice crucial for performance.
+
+**4. Stability Comparison**
+Q: Which sorting algorithms are stable?
+A: Merge Sort (stable), Bubble Sort (stable), Quick Sort (unstable)
+
+**5. Space Complexity**
+Q: What is merge sort's space complexity?
+A: O(n) - requires auxiliary array for merging
+
+**6. Quick Sort Partitioning**
+Q: What happens during quick sort partitioning?
+A: Elements less than pivot go left, greater go right. Pivot in final position.
+
+**7. Best Case Scenarios**
+Q: When does bubble sort achieve O(n)?
+A: When array is already sorted and using optimized version with early exit flag
+
+**8. Merge Sort Advantage**
+Q: Why use merge sort over quick sort?
+A: Guaranteed O(n log n) performance, stable sorting, predictable behavior
+
+**9. Quick Sort Average Case**
+Q: What is quick sort's average time complexity?
+A: O(n log n) with random pivot selection
+
+**10. In-Place Sorting**
+Q: Which algorithms sort in-place?
+A: Quick Sort (O(log n) stack space), Bubble Sort (O(1)). Merge Sort needs O(n).
+
+**11. When to Use Bubble Sort**
+Q: When should you use bubble sort?
+A: Educational purposes or very small datasets (n < 10). Generally avoid in production.
+
+**12. Sorting Algorithm Selection**
+Q: How to choose between merge sort and quick sort?
+A: Merge Sort: need stability/guaranteed performance. Quick Sort: average case speed, limited memory.
+
+**ADDED 12 FLASHCARDS TO YOUR CS201 DECK!**
+
+Spaced repetition schedule set:
+- 4 cards due today (review now!)
+- 5 cards due in 2 days
+- 3 cards due in 1 week
+
+Want me to quiz you on any of these concepts now?`,
+      agent: "notes" as const,
+      citations: [],
+      showStreaming: true,
+      showVoice: false,
+    },
+    {
+      courseCode: "MATH241",
+      userPrompt: "Summarize my calculus lecture notes from this week",
+      assistantResponse: `I'll summarize your calculus notes! 📝
+
+**WEEK'S TOPICS COVERED:**
+
+**Monday: Multiple Integrals Review**
+- Double integrals for area and volume
+- Fubini's theorem for changing integration order
+- Setting up bounds for different regions
+
+**Wednesday: Triple Integrals Introduction**
+- Extending to 3D regions
+- Rectangular, cylindrical coordinates
+- Volume calculations
+
+**Friday: Cylindrical & Spherical Coordinates**
+- When to use each coordinate system
+- Conversion formulas
+- Jacobian determinants
+
+**KEY FORMULAS:**
+
+Triple Integral (Rectangular):
+∫∫∫ f(x,y,z) dx dy dz
+
+Cylindrical (r, θ, z):
+∫∫∫ f(r,θ,z) r dr dθ dz
+[Note the extra 'r' factor!]
+
+Spherical (ρ, θ, φ):
+∫∫∫ f(ρ,θ,φ) ρ² sin(φ) dρ dθ dφ
+
+**PRACTICE PROBLEMS NOTED:**
+1. Find volume of sphere using triple integrals
+2. Convert between coordinate systems
+3. Set up bounds for cone region
+
+**EXAM TIPS FROM NOTES:**
+✓ Always sketch the region first
+✓ Choose coordinates that match region symmetry
+✓ Remember the Jacobian factors (r for cylindrical, ρ² sin(φ) for spherical)
+✓ Double-check integration bounds
+
+**AREAS NEEDING REVIEW:**
+- Spherical coordinate setup (marked "confused" in your notes)
+- Jacobian derivation (starred for review)
+
+Want me to create flashcards for these concepts or help clarify spherical coordinates?`,
+      agent: "notes" as const,
+      citations: [],
+      showStreaming: true,
+      showVoice: false,
+    },
+
+    // === MORE RESEARCH AGENT DEMOS ===
+    {
+      courseCode: "CS305",
+      userPrompt: "I need to research database indexing strategies for my term paper",
+      assistantResponse: `I'll help you find credible sources on database indexing! 🔬
+
+**ACADEMIC SOURCES FOUND:**
+
+**1. Primary Research Papers:**
+
+📄 **"The Case for Learned Index Structures"** - Kraska et al. (2018)
+- Published in: ACM SIGMOD
+- Key contribution: ML-based indexes vs traditional B-trees
+- Citation: Kraska, T., et al. (2018). The case for learned index structures. SIGMOD.
+- Why relevant: Cutting-edge approach to indexing
+
+📄 **"Modern B-Tree Techniques"** - Graefe (2011)
+- Published in: Foundations and Trends in Databases
+- Comprehensive survey of B-tree variants
+- 200+ page detailed analysis
+- Available: University library database
+
+**2. Foundational Textbooks:**
+
+📚 **Database System Concepts** - Silberschatz, Korth, Sudarshan (7th ed.)
+- Chapter 11: Indexing and Hashing
+- Covers B+ trees, hash indexes, bitmap indexes
+- In library: Call number QA76.9.D3 S5637
+
+📚 **Database Management Systems** - Ramakrishnan & Gehrke
+- Chapter 8: Tree-Structured Indexing
+- Chapter 9: Hash-Based Indexing
+
+**3. Performance Studies:**
+
+📊 **"An Empirical Evaluation of Index Structures"** - Chen et al. (2020)
+- Compares performance across different workloads
+- Real-world benchmarks (TPC-H, TPC-C)
+
+**RECOMMENDED PAPER STRUCTURE:**
+
+I. Introduction
+   - Importance of indexing in database performance
+   - Thesis: Different indexing strategies suit different workload patterns
+
+II. Traditional Index Structures
+   A. B+ Trees [Cite: Silberschatz Ch. 11]
+   B. Hash Indexes [Cite: Ramakrishnan Ch. 9]
+   C. Bitmap Indexes
+
+III. Modern Approaches
+   A. Learned Indexes [Cite: Kraska 2018]
+   B. Adaptive Indexing
+   C. Column-Store Indexes
+
+IV. Performance Comparison [Cite: Chen 2020]
+   - OLTP workloads
+   - OLAP workloads
+   - Hybrid (HTAP) workloads
+
+V. Conclusion
+   - Trade-offs between index types
+   - Future directions
+
+**SEARCH KEYWORDS:**
+- "database indexing strategies"
+- "B-tree vs hash index"
+- "learned index structures"
+- "database performance optimization"
+
+**WHERE TO FIND PAPERS:**
+- ACM Digital Library (university access)
+- IEEE Xplore
+- Google Scholar (for free PDFs)
+- arXiv (for preprints)
+
+Want help setting up citations in APA or MLA format?`,
+      agent: "research" as const,
+      citations: [],
+      showStreaming: true,
+      showVoice: false,
+    },
+    {
+      courseCode: "PHYS211",
+      userPrompt: "Find research papers on projectile motion for my physics lab report",
+      assistantResponse: `I'll help you find sources for your projectile motion lab report! 🔬
+
+**FOUNDATIONAL SOURCES:**
+
+**1. Classical Mechanics References:**
+
+📚 **"Physics for Scientists and Engineers"** - Serway & Jewett
+- Chapter 4: Motion in Two Dimensions
+- Section 4.3: Projectile Motion
+- Has detailed derivations and examples
+
+📚 **"Classical Mechanics"** - Taylor
+- More rigorous mathematical treatment
+- Air resistance effects (Ch. 2.4)
+
+**2. Experimental Studies:**
+
+📄 **"Experimental Verification of Projectile Motion"** - Various authors
+- Common undergraduate physics journal
+- Real experimental data and error analysis
+- Available: American Journal of Physics
+
+📄 **"Air Resistance in Projectile Motion"** - Peters (2012)
+- Discusses drag coefficient effects
+- Compares vacuum vs real-world trajectories
+
+**3. Computational Approaches:**
+
+📄 **"Numerical Solutions to Projectile Motion with Air Resistance"**
+- Euler's method application
+- Runge-Kutta methods
+- Python/MATLAB implementations
+
+**LAB REPORT STRUCTURE:**
+
+I. Theory
+   - Kinematic equations [Cite: Serway Ch. 4]
+   - Range formula derivation
+   - Time of flight calculation
+
+II. Experimental Setup
+   - Apparatus description
+   - Measurement tools (photogate, ruler)
+   - Initial conditions
+
+III. Data & Analysis
+   - Raw measurements (table)
+   - Calculated vs measured range
+   - Error analysis (% error)
+
+IV. Discussion
+   - Sources of error (air resistance, measurement uncertainty)
+   - Comparison with theoretical predictions [Cite: Peters 2012]
+
+V. Conclusion
+   - Verification of kinematic equations
+   - Real-world limitations
+
+**KEY EQUATIONS TO INCLUDE:**
+
+Range: R = (v₀² sin(2θ)) / g
+Time of flight: t = (2v₀ sin(θ)) / g
+Maximum height: h = (v₀² sin²(θ)) / (2g)
+
+**ERROR ANALYSIS CONSIDERATIONS:**
+- Angle measurement uncertainty (±2°)
+- Initial velocity measurement (±0.1 m/s)
+- Air resistance effects (<5% for typical lab)
+- Timing measurement (photogate precision)
+
+Want help with the error propagation calculations or data analysis?`,
+      agent: "research" as const,
+      citations: [],
+      showStreaming: true,
+      showVoice: false,
+    },
+
+    // === MORE CAMPUS AGENT DEMOS ===
+    {
+      courseCode: "CS305",
+      userPrompt: "Where can I find a study group for database systems?",
+      assistantResponse: `I'll help you find database study resources on campus! 📍
+
+**STUDY GROUPS:**
+
+**1. CS305 Official Study Group**
+📅 When: Tuesdays & Thursdays, 6:00-8:00 PM
+📍 Where: Engineering Building, Room 105 (CS Lab)
+👥 Led by: TA Sarah Martinez
+💬 Focus: Weekly problem sets, SQL practice, exam prep
+
+**2. Database Club Meetings**
+📅 When: Wednesdays, 7:00 PM
+📍 Where: Student Union, Room 3B
+👥 Group size: 15-20 students
+💬 Topics: Real-world database projects, PostgreSQL workshops
+
+**ADDITIONAL RESOURCES:**
+
+**Tutoring Services:**
+📍 Engineering Learning Center (Eng 201)
+⏰ Walk-in hours: Mon-Fri 9 AM - 5 PM
+📝 Book appointments: englearning.edu/tutoring
+🎯 Free one-on-one help with:
+   - SQL queries
+   - ER diagrams
+   - Normalization
+   - Transaction concepts
+
+**Professor Office Hours:**
+📍 Prof. Johnson: Eng 302
+⏰ Wednesdays 2:00-4:00 PM, Fridays 10:00 AM - 12:00 PM
+💡 Great for: Project questions, exam clarification
+
+**TA Office Hours:**
+📍 Sarah Martinez: Eng 105 (CS Lab)
+⏰ Tuesdays 4:00-6:00 PM (before study group)
+
+**ONLINE RESOURCES:**
+
+💬 **CS305 Discord Server**
+🔗 discord.gg/cs305-fall2025
+👥 200+ students
+📝 Channels: #sql-help, #project-discuss, #exam-prep
+
+💬 **Database Practice Lab**
+📍 Eng 105 - Open lab with sample databases
+⏰ 24/7 access with student card
+🖥️ PostgreSQL, MySQL, MongoDB installed
+
+**STUDY ROOM RESERVATIONS:**
+
+📚 **Library Study Rooms** (2-8 people)
+🔗 Reserve: library.edu/studyrooms
+⏰ Book up to 2 weeks in advance
+💡 Tip: Rooms with whiteboards (201-205) are perfect for ER diagrams
+
+📚 **Engineering Building Study Spaces**
+📍 Eng 1st floor lounge (no reservation)
+📍 Eng 3rd floor quiet study (individual)
+
+**UPCOMING EVENTS:**
+
+🎯 **Database Design Workshop**
+📅 Friday, 3:00-5:00 PM
+📍 Eng 201
+👨‍🏫 Industry speaker from Oracle
+
+Need help finding your way to any of these locations?`,
+      agent: "campus" as const,
+      citations: [],
+      showStreaming: false,
+      showVoice: true,
+    },
+    {
+      courseCode: "MATH241",
+      userPrompt: "Where is the math help center and when is it open?",
+      assistantResponse: `Here's everything about the Math Help Center! 📍
+
+**MAIN MATH HELP CENTER:**
+
+📍 **Location:** Mathematics Building, Room 120
+🏢 First floor, west wing (near main entrance)
+
+**Hours:**
+⏰ Monday-Thursday: 9:00 AM - 8:00 PM
+⏰ Friday: 9:00 AM - 5:00 PM
+⏰ Saturday: 11:00 AM - 4:00 PM
+⏰ Sunday: 1:00 PM - 6:00 PM
+
+**What They Offer:**
+✓ Drop-in tutoring (no appointment needed)
+✓ Help with MATH241 (Calc III) specifically
+✓ Whiteboard areas for working through problems
+✓ Practice problem sheets
+✓ Exam review sessions before midterms/finals
+
+**Average Wait Time:**
+- Morning (9-11 AM): ⏱️ 5-10 minutes
+- Afternoon (2-4 PM): ⏱️ 15-20 minutes ⚠️ Busy
+- Evening (6-8 PM): ⏱️ 10-15 minutes
+- **Least crowded:** Saturday mornings 📊
+
+**ADDITIONAL MATH RESOURCES:**
+
+**Professor Office Hours:**
+📍 Prof. Williams: Math Building, Room 304
+⏰ Tuesdays 1:00-3:00 PM, Thursdays 3:00-5:00 PM
+💡 Best for: Conceptual questions, exam strategy
+
+**TA Office Hours:**
+📍 Alex Chen: Math 120 (Help Center)
+⏰ Wednesdays 4:00-6:00 PM
+💡 Focus: Problem-solving, homework help
+
+**Calc III Study Group:**
+📅 Thursdays, 7:00-9:00 PM
+📍 Library, Group Study Room 3B
+👥 15-20 students, peer-led
+🎯 Work through practice problems together
+
+**ONLINE OPTIONS:**
+
+💻 **Virtual Math Help Center**
+🔗 math.edu/virtual-help
+⏰ Monday-Friday 6:00-10:00 PM
+📝 Submit questions via chat or video call
+⌛ Response time: 10-15 minutes
+
+**EXAM PREP:**
+
+🎯 **Calc III Review Sessions** (Before midterm/final)
+📅 Announced 1 week before exams
+📍 Large Lecture Hall (Math 100)
+👨‍🏫 Led by professor + TAs
+📝 Practice exams, common mistakes, tips
+
+**Getting There:**
+
+From Engineering Building:
+1. Exit main entrance
+2. Walk east toward quad (2 min)
+3. Math Building is the brick building on left
+4. Enter main entrance, turn right
+5. Help Center is Room 120 (first door)
+
+🚌 Campus shuttle stops right outside (Blue Route)
+
+Need directions from your current location?`,
+      agent: "campus" as const,
+      citations: [],
+      showStreaming: false,
+      showVoice: true,
     },
   ];
 
   // Generate conversations for each course
   courses.forEach((course) => {
-    const courseTemplates = conversationTemplates.filter(t => t.courseCode === course.code);
+    const courseTemplates: ConversationTemplate[] = conversationTemplates.filter(t => t.courseCode === course.code);
     
     // If no templates for this course, create default ones
     if (courseTemplates.length === 0) {
@@ -633,6 +1240,7 @@ Want me to help test this function?`,
         agent: "course" as const,
         citations: [],
         showStreaming: true,
+        showVoice: false,
       });
     }
     
@@ -666,7 +1274,7 @@ Want me to help test this function?`,
       // Assistant response
       const responseTime = new Date(timestamp);
       responseTime.setSeconds(responseTime.getSeconds() + 3 + Math.floor(Math.random() * 5));
-      
+
       messages.push({
         id: `${conversationId}-assistant`,
         userId,
@@ -680,6 +1288,7 @@ Want me to help test this function?`,
           snippet: c.snippet,
         })) || [],
         createdAt: responseTime.toISOString(),
+        ...(template.hasImage ? { hasImage: true, imageType: template.imageType } : {}),
       });
     }
   });
@@ -689,8 +1298,8 @@ Want me to help test this function?`,
 
 export function generateBusinessConversations(courses: Course[], userId: string, now: Date): Message[] {
   const messages: Message[] = [];
-  
-  const conversationTemplates = [
+
+  const conversationTemplates: ConversationTemplate[] = [
     // === STREAMING + VOICE DEMO ===
     {
       courseCode: "PSYCH101",
@@ -798,6 +1407,7 @@ Want me to add this to your calendar?`,
       agent: "planner" as const,
       citations: [],
       showStreaming: true,
+      showVoice: false,
     },
     
     // === EXAM AGENT ===
@@ -840,11 +1450,212 @@ Want a day-by-day study schedule?`,
         { sourceId: "mat-course-psych101-2", snippet: "Learning Theories, pages 1-18" },
       ],
       showStreaming: true,
+      showVoice: false,
+    },
+
+    // === NOTES AGENT ===
+    {
+      courseCode: "BUS201",
+      userPrompt: "Create flashcards from my management theories notes",
+      assistantResponse: `I'll create flashcards from your management notes! 📔
+
+**ANALYZING YOUR NOTES:**
+
+Found comprehensive notes on Taylor, Mayo, and modern management approaches.
+
+**FLASHCARD SET CREATED (10 cards):**
+
+**1. Scientific Management**
+Q: What is Taylor's Scientific Management?
+A: Focus on efficiency through systematic observation, time-motion studies, standardization
+
+**2. Hawthorne Effect**
+Q: What did the Hawthorne Studies reveal?
+A: Social factors matter more than physical conditions. Workers respond to being observed.
+
+**3. Human Relations**
+Q: What is Mayo's Human Relations approach?
+A: Emphasis on employee satisfaction, informal groups, communication
+
+**4. Systems Thinking**
+Q: What is systems thinking in management?
+A: Organizations as open systems interacting with environment
+
+**5. Contingency Theory**
+Q: What is contingency theory?
+A: Best management approach depends on situation. No one-size-fits-all.
+
+**6. TQM Principles**
+Q: What are key TQM principles?
+A: Continuous improvement, customer focus, employee involvement
+
+**7. Matrix Organization**
+Q: What is a matrix organization?
+A: Structure combining functional and project-based reporting lines
+
+**8. Leadership Types**
+Q: Transactional vs Transformational leadership?
+A: Transactional: exchange/rewards. Transformational: inspires change, empowers.
+
+**9. SWOT Analysis**
+Q: What is SWOT analysis?
+A: Strategic planning tool: Strengths, Weaknesses, Opportunities, Threats
+
+**10. Organizational Culture**
+Q: Define organizational culture
+A: Shared values, beliefs, practices that shape behavior within organization
+
+**ADDED 10 FLASHCARDS TO YOUR BUS201 DECK!**
+
+Schedule: 3 cards due today, 4 in 2 days, 3 in 1 week.
+
+Want to review them now?`,
+      agent: "notes" as const,
+      citations: [],
+      showStreaming: true,
+      showVoice: false,
+    },
+
+    // === RESEARCH AGENT ===
+    {
+      courseCode: "PSYCH220",
+      userPrompt: "Find research papers on group dynamics for my social psych paper",
+      assistantResponse: `I'll help you find credible sources on group dynamics! 🔬
+
+**ACADEMIC SOURCES:**
+
+**1. Foundational Research:**
+
+📄 **"Groupthink: Psychological Studies"** - Janis (1972)
+- Classic study on group decision-making failures
+- Bay of Pigs, Watergate examples
+- Citation: Janis, I. L. (1972). *Victims of Groupthink*.
+
+📄 **"Social Facilitation"** - Zajonc (1965)
+- Presence of others affects performance
+- Simple tasks improved, complex tasks hindered
+- Foundational social psychology research
+
+**2. Modern Studies:**
+
+📄 **"The Wisdom of Crowds"** - Surowiecki (2004)
+- When groups make better decisions than individuals
+- Diversity, independence, decentralization needed
+
+📄 **"Group Dynamics and Team Effectiveness"** - Hackman (2011)
+- Team performance factors
+- Published in *Annual Review of Psychology*
+
+**3. Textbook References:**
+
+📚 **Social Psychology** - Myers & Twenge (12th ed.)
+- Chapter 8: Group Influence
+- Covers groupthink, social facilitation, group polarization
+
+**PAPER STRUCTURE:**
+
+I. Introduction
+   - Importance of understanding group dynamics
+   - Thesis: Groups can enhance or hinder decision-making
+
+II. Groupthink [Cite: Janis 1972]
+   - Definition and characteristics
+   - Real-world examples
+   - Prevention strategies
+
+III. Social Facilitation [Cite: Zajonc 1965]
+   - How presence affects performance
+   - Simple vs complex tasks
+
+IV. Group Polarization
+   - Groups amplify initial tendencies
+   - Echo chamber effects
+
+V. Practical Applications
+   - Workplace teams
+   - Decision-making processes
+
+**SEARCH TERMS:**
+- "group dynamics psychology"
+- "groupthink research"
+- "social facilitation studies"
+- "team performance factors"
+
+**WHERE TO SEARCH:**
+- PsycINFO database
+- Google Scholar
+- APA PsycArticles
+
+Need help with APA citations?`,
+      agent: "research" as const,
+      citations: [],
+      showStreaming: true,
+      showVoice: false,
+    },
+
+    // === CAMPUS AGENT ===
+    {
+      courseCode: "BUS305",
+      userPrompt: "Where can I get help with my marketing presentation?",
+      assistantResponse: `Let me find presentation resources for you! 📍
+
+**PRESENTATION HELP:**
+
+**1. Business Communication Lab**
+📍 Business Building, Room 205
+⏰ Mon-Fri: 10 AM - 6 PM
+🎯 Services:
+   - Presentation practice with feedback
+   - Slide design consultation
+   - Speech coaching
+   - Recording equipment for practice
+
+**2. Career Center Workshops**
+📍 Student Services Building, 3rd floor
+📅 "Effective Business Presentations" - Every Tuesday 4-5 PM
+💡 Topics: Body language, slide design, Q&A handling
+
+**STUDY GROUPS:**
+
+**Marketing Club**
+📅 Thursdays 6:00 PM
+📍 Business Building, Room 101
+👥 Practice presentations with peers
+
+**RESOURCES:**
+
+📚 **Presentation Practice Rooms**
+📍 Library, 2nd floor (Rooms 201-210)
+🔗 Reserve: library.edu/studyrooms
+🎥 Equipped with: Projector, recording camera, whiteboard
+
+💻 **Presentation Software**
+📍 Business Lab (Bus 105)
+🖥️ Available: PowerPoint, Prezi, Canva Pro
+⏰ Open 24/7 with student card
+
+**PROFESSOR OFFICE HOURS:**
+📍 Prof. Anderson: Bus 308
+⏰ Wednesdays 2-4 PM
+💡 Great for: Content feedback, Q&A prep
+
+**UPCOMING:**
+
+🎯 **Marketing Presentation Clinic**
+📅 Friday 3-5 PM
+📍 Bus 205
+👨‍🏫 Industry professionals giving feedback
+
+Need directions to any of these locations?`,
+      agent: "campus" as const,
+      citations: [],
+      showStreaming: false,
+      showVoice: true,
     },
   ];
 
   courses.forEach((course) => {
-    const courseTemplates = conversationTemplates.filter(t => t.courseCode === course.code);
+    const courseTemplates: ConversationTemplate[] = conversationTemplates.filter(t => t.courseCode === course.code);
     
     if (courseTemplates.length === 0) {
       courseTemplates.push({
@@ -854,6 +1665,7 @@ Want a day-by-day study schedule?`,
         agent: "course" as const,
         citations: [],
         showStreaming: true,
+        showVoice: false,
       });
     }
     
@@ -882,13 +1694,14 @@ Want a day-by-day study schedule?`,
       
       const responseTime = new Date(timestamp);
       responseTime.setSeconds(responseTime.getSeconds() + 4 + Math.floor(Math.random() * 6));
-      
+
       messages.push({
         id: `${conversationId}-assistant`,
         userId,
         agent: detectedAgent,
         prompt: template.userPrompt,
         answer: template.assistantResponse,
+        ...(template.hasImage ? { hasImage: true, imageType: template.imageType } : {}),
         citations: template.citations?.map(c => ({
           label: `[${template.citations!.indexOf(c) + 1}]`,
           sourceType: "material" as const,

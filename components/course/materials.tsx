@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Upload, FileText, Link as LinkIcon, Video, File, Loader2 } from "lucide-react";
 import { QuickActionsDrawer } from "./quick-actions-drawer";
 import { generateId } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 
 export function CourseMaterials() {
   const { courseId } = useCourse();
+  const { toast } = useToast();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,12 +58,19 @@ export function CourseMaterials() {
       };
 
       addMaterial(newMaterial);
-      
+
       // Show success
-      alert(`File "${file.name}" uploaded successfully!`);
+      toast({
+        title: "Success",
+        description: `File "${file.name}" uploaded successfully!`,
+      });
     } catch (error) {
       console.error("Upload failed:", error);
-      alert("Failed to upload file. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to upload file. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
       if (fileInputRef.current) {

@@ -11,10 +11,12 @@ import { useStore } from "@/lib/store";
 import { importSnapshot } from "@/lib/storage";
 import { downloadCalendar } from "@/lib/calendar-export";
 import { CoursePerformanceInsights } from "./performance-insights";
+import { useToast } from "@/components/ui/use-toast";
 
 export function CourseSettings() {
   const { course, courseId } = useCourse();
   const { exportData, importData, resetData } = useStore();
+  const { toast } = useToast();
   
   const studyBlocks = useStore((state) =>
     state.studyBlocks.filter((b) => b.courseId === courseId)
@@ -49,9 +51,16 @@ export function CourseSettings() {
         try {
           const snapshot = await importSnapshot(file);
           importData(snapshot);
-          alert("Course data imported successfully!");
+          toast({
+            title: "Success",
+            description: "Course data imported successfully!",
+          });
         } catch (error) {
-          alert("Failed to import: " + (error as Error).message);
+          toast({
+            title: "Error",
+            description: "Failed to import: " + (error as Error).message,
+            variant: "destructive",
+          });
         }
       }
     };

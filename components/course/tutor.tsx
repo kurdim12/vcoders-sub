@@ -1,25 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useCourse } from "@/components/course-context";
 import { useStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AgentChip } from "@/components/agent-chip";
-import { aiAsk } from "@/lib/ai";
 import { logLearningEvent, awardXP } from "@/lib/hooks/xp";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, StopCircle } from "lucide-react";
 import type { AIResponse } from "@/lib/types";
 import { WorkflowVisualization } from "@/components/workflow-visualization";
 import { VoiceInput } from "@/components/voice-input";
+import { retrieveRelevantDocuments, extractSnippet } from "@/lib/retrieval";
 
 export function CourseTutor() {
   const { courseId } = useCourse();
-  const [messages, setMessages] = useState<Array<{ 
-    role: "user" | "assistant"; 
-    content: string; 
-    agent?: AIResponse["agent"]; 
+  const [messages, setMessages] = useState<Array<{
+    role: "user" | "assistant";
+    content: string;
+    agent?: AIResponse["agent"];
     citations?: AIResponse["citations"];
     workflow?: any;
     reasoning?: string;
@@ -48,20 +48,62 @@ export function CourseTutor() {
     setLoading(true);
 
     try {
-      const response = await aiAsk(question, { courseId, materials, notes, userId: user.id });
+      // Prepare documents for retrieval
+      const documents = [
+        ...materials.map((m) => ({
+          id: m.id,
+          text: m.textPreview || m.title,
+          metadata: { type: "material", courseId: m.courseId, title: m.title },
+        })),
+        ...notes.map((n) => ({
+          id: n.id,
+          text: n.body,
+          metadata: { type: "note", courseId: n.courseId, title: n.title },
+        })),
+      ];
+
+      // Retrieve relevant documents
+      const relevantDocs = retrieveRelevantDocuments(question, documents, 3);
+
+      // Prepare context snippets
+      const snippets = relevantDocs.map((doc) => ({
+        text: extractSnippet(doc.text, question, 200),
+        sourceId: doc.id,
+        sourceType: doc.metadata?.type || "material",
+        title: doc.metadata?.title || doc.id,
+      }));
+
+      // Call API (non-streaming to show workflow)
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: question,
+          courseId,
+          context: { snippets },
+          userId: user.id,
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("AI request failed");
+      }
+
+      const data = await response.json();
       const duration = Math.round((Date.now() - startTime) / 1000);
-      
+
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: response.answer,
-          agent: response.agent,
-          citations: response.citations,
-          workflow: response.workflow,
-          reasoning: response.reasoning,
-          agentCalls: response.agentCalls,
-          toolsUsed: response.toolsUsed,
+          content: data.answer,
+          agent: data.agent,
+          citations: data.citations,
+          workflow: data.workflow,
+          reasoning: data.reasoning,
+          agentCalls: data.agentCalls,
+          toolsUsed: data.toolsUsed,
         },
       ]);
 
@@ -73,7 +115,7 @@ export function CourseTutor() {
           "tutor",
           {
             question,
-            materialRefs: response.citations.map((c) => c.sourceId).filter(Boolean),
+            materialRefs: data.citations?.map((c: any) => c.sourceId).filter(Boolean) || [],
           },
           duration,
           "completed"
@@ -81,10 +123,10 @@ export function CourseTutor() {
 
         await awardXP(user.id, courseId, "tutor_session", 15, {
           qLen: question.length,
-          agent: response.agent,
+          agent: data.agent,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to get response:", error);
       setMessages((prev) => [
         ...prev,
@@ -226,4 +268,3 @@ export function CourseTutor() {
     </div>
   );
 }
-

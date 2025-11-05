@@ -97,7 +97,7 @@ export function generateCSFlashcards(courses: Course[], userId: string, now: Dat
       const defaultCard = createFlashcard(
         course.id,
         `What is ${course.code}?`,
-        `${course.title}: ${course.description || 'Course content'}`,
+        `${course.title}: Course content and fundamentals`,
         "medium"
       );
       flashcards.push(defaultCard);
@@ -215,7 +215,7 @@ export function generateBusinessFlashcards(courses: Course[], userId: string, no
       const defaultCard = createFlashcard(
         course.id,
         `What is ${course.code}?`,
-        `${course.title}: ${course.description || 'Course content'}`,
+        `${course.title}: Course content and fundamentals`,
         "medium"
       );
       flashcards.push(defaultCard);

@@ -39,6 +39,7 @@ import { useStore } from "@/lib/store";
 import { importSnapshot } from "@/lib/storage";
 import { ModeIndicator } from "@/components/mode-indicator";
 import { AccountSwitcher } from "@/components/account-switcher";
+import { useToast } from "@/components/ui/use-toast";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -59,6 +60,7 @@ export function Navbar() {
   const { exportData, resetData, importData } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -83,9 +85,18 @@ export function Navbar() {
         try {
           const snapshot = await importSnapshot(file);
           importData(snapshot);
-          alert("Data imported successfully!");
+          toast({
+            title: "Success!",
+            description: "Data imported successfully",
+            duration: 3000,
+          });
         } catch (error) {
-          alert("Failed to import data: " + (error as Error).message);
+          toast({
+            title: "Import Failed",
+            description: (error as Error).message,
+            variant: "destructive",
+            duration: 5000,
+          });
         }
       }
     };
@@ -95,7 +106,11 @@ export function Navbar() {
   const handleReset = () => {
     if (confirm("Are you sure you want to reset all data to demo defaults?")) {
       resetData();
-      alert("Data reset successfully!");
+      toast({
+        title: "Success!",
+        description: "Data reset successfully",
+        duration: 3000,
+      });
     }
   };
 

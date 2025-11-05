@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StoreInitializer } from "@/components/store-initializer";
 import { PWAInstaller } from "@/components/pwa-installer";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -52,6 +53,7 @@ export default function RootLayout({
           <StoreInitializer />
           <PWAInstaller />
           {children}
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

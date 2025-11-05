@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { generateId } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 
 export function QuickActionsDrawer({
   open,
@@ -33,6 +34,7 @@ export function QuickActionsDrawer({
   onOpenChange: (open: boolean) => void;
 }) {
   const { courseId } = useCourse();
+  const { toast } = useToast();
   const addMaterial = useStore((state) => state.addMaterial);
   const addAssignment = useStore((state) => state.addAssignment);
   const addStudyBlock = useStore((state) => state.addStudyBlock);
@@ -99,9 +101,16 @@ export function QuickActionsDrawer({
       onOpenChange(false);
       setAction(null);
       // Show success feedback
-      alert("Material added successfully!");
+      toast({
+        title: "Success",
+        description: "Material added successfully!",
+      });
     } else {
-      alert("Please fill in all fields");
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
     }
   };
 
@@ -118,9 +127,16 @@ export function QuickActionsDrawer({
       onOpenChange(false);
       setAction(null);
       // Show success feedback
-      alert("Material added successfully!");
+      toast({
+        title: "Success",
+        description: "Assignment added successfully!",
+      });
     } else {
-      alert("Please fill in all fields");
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
     }
   };
 
@@ -139,9 +155,16 @@ export function QuickActionsDrawer({
       onOpenChange(false);
       setAction(null);
       // Show success feedback
-      alert("Material added successfully!");
+      toast({
+        title: "Success",
+        description: "Study block added successfully!",
+      });
     } else {
-      alert("Please fill in all fields");
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
     }
   };
 
@@ -159,9 +182,16 @@ export function QuickActionsDrawer({
       onOpenChange(false);
       setAction(null);
       // Show success feedback
-      alert("Material added successfully!");
+      toast({
+        title: "Success",
+        description: "Note added successfully!",
+      });
     } else {
-      alert("Please fill in all fields");
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
     }
   };
 
@@ -179,9 +209,16 @@ export function QuickActionsDrawer({
       onOpenChange(false);
       setAction(null);
       // Show success feedback
-      alert("Material added successfully!");
+      toast({
+        title: "Success",
+        description: "Exam added successfully!",
+      });
     } else {
-      alert("Please fill in all fields");
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
     }
   };
 
